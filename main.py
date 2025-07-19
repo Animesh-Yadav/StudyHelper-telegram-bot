@@ -3,7 +3,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 
 # Replace with your actual bot token
 import os
-BOT_TOKEN = os.environ["BOT_TOKEN"]
+BOT_TOKEN = os.environ["7955835419:AAGjxTFvtAUckg-yVfxxphPWhrEksPk5sZU"]
 
 
 # Admin ID (replace with your Telegram user ID)
