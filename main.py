@@ -2,7 +2,9 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 # Replace with your actual bot token
-BOT_TOKEN = "7955835419:AAGjxTFvtAUckg-yVfxxphPWhrEksPk5sZU"
+import os
+BOT_TOKEN = os.environ["BOT_TOKEN"]
+
 
 # Admin ID (replace with your Telegram user ID)
 ADMIN_ID = 6645404238  # TODO: Replace this with your real Telegram user ID
