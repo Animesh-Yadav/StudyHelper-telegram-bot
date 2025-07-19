@@ -4,9 +4,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, fil
 # Replace with your actual bot token
 BOT_TOKEN = "7955835419:AAGjxTFvtAUckg-yVfxxphPWhrEksPk5sZU"
 
-
 # Admin ID (replace with your Telegram user ID)
-ADMIN_ID = 6645404238  # TODO: Replace this with your real Telegram user ID
+ADMIN_ID = 6645404238
 
 # Data for the bot flow
 classes = ['6', '7', '8', '9', '10', '11', '12']
@@ -23,8 +22,6 @@ years = ['2020', '2021', '2022', '2023', '2024']
 
 # Temporary user state
 user_data = {}
-
-# For tracking stats
 user_logs = []
 
 
@@ -42,7 +39,8 @@ def main_menu():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     user_data[chat_id] = {'step': 'menu'}
-    await update.message.reply_text("👋 Welcome! Please choose an option:", reply_markup=ReplyKeyboardMarkup(main_menu(), resize_keyboard=True))
+    await update.message.reply_text("👋 Welcome! Please choose an option:",
+                                    reply_markup=ReplyKeyboardMarkup(main_menu(), resize_keyboard=True))
 
 
 async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -73,7 +71,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "📚 Start" or text == "☰ Menu":
         data = {'step': 'class'}
         keyboard = build_keyboard(classes, add_back=False)
-        await update.message.reply_text("📚 Please select your class:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+        await update.message.reply_text("📚 Please select your class:",
+                                        reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         user_data[chat_id] = data
         return
 
@@ -83,16 +82,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             data.pop('class', None)
             data['step'] = 'class'
             keyboard = build_keyboard(classes, add_back=False)
-            await update.message.reply_text("📚 Please select your class:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("📚 Please select your class:",
+                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         elif data['step'] == 'year':
             data.pop('subject', None)
             data['step'] = 'subject'
             cls = data['class']
             keyboard = build_keyboard(subjects[cls], add_back=True)
-            await update.message.reply_text("📘 Please select your subject:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("📘 Please select your subject:",
+                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         else:
             data = {'step': 'menu'}
-            await update.message.reply_text("🔁 Back to main menu. Choose an option:", reply_markup=ReplyKeyboardMarkup(main_menu(), resize_keyboard=True))
+            await update.message.reply_text("🔁 Back to main menu. Choose an option:",
+                                            reply_markup=ReplyKeyboardMarkup(main_menu(), resize_keyboard=True))
         user_data[chat_id] = data
         return
 
@@ -102,10 +104,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             data['class'] = text
             data['step'] = 'subject'
             keyboard = build_keyboard(subjects[text])
-            await update.message.reply_text("📘 Please select your subject:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("📘 Please select your subject:",
+                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         else:
             keyboard = build_keyboard(classes, add_back=False)
-            await update.message.reply_text("❗ Invalid class. Please select from the options.", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("❗ Invalid class. Please select from the options.",
+                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
     # Subject selection
     elif data['step'] == 'subject':
@@ -113,11 +117,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             data['subject'] = text
             data['step'] = 'year'
             keyboard = build_keyboard(years)
-            await update.message.reply_text("📅 Please select the year:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("📅 Please select the year:",
+                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         else:
             cls = data['class']
             keyboard = build_keyboard(subjects[cls])
-            await update.message.reply_text("❗ Invalid subject. Please select from the options.", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("❗ Invalid subject. Please select from the options.",
+                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
     # Year selection
     elif data['step'] == 'year':
@@ -132,15 +138,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_data.pop(chat_id, None)
         else:
             keyboard = build_keyboard(years)
-            await update.message.reply_text("❗ Invalid year. Please select from the options.", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("❗ Invalid year. Please select from the options.",
+                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
     user_data[chat_id] = data
 
 
-# Main function
 if __name__ == '__main__':
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('admin', admin))
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+
     app.run_polling()
