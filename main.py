@@ -152,11 +152,14 @@ def run_telegram_bot():
         app.add_handler(CommandHandler('admin', admin))
         app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-        # Use run_polling instead of complex async setup
+        # Use run_polling instead of complex async setup - this replaces all the problematic async code
+        print("Bot handlers added, starting polling...")
         app.run_polling(drop_pending_updates=True)
         
     except Exception as e:
         print(f"Error running Telegram bot: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == '__main__':
     # Create Flask app for port binding (required by Render Web Service)
