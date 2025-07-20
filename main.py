@@ -143,7 +143,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data[chat_id] = data
 
 def run_telegram_bot():
-    """Run the Telegram bot - FIXED VERSION"""
+    """Run the Telegram bot - FIXED VERSION with proper event loop"""
+    import asyncio
+    
+    # Set up event loop for this thread
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    
     try:
         print("Starting Telegram bot...")
         app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -152,8 +157,8 @@ def run_telegram_bot():
         app.add_handler(CommandHandler('admin', admin))
         app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-        # Use run_polling instead of complex async setup - this replaces all the problematic async code
         print("Bot handlers added, starting polling...")
+        # Now run_polling will work because we have an event loop
         app.run_polling(drop_pending_updates=True)
         
     except Exception as e:
@@ -181,13 +186,23 @@ if __name__ == '__main__':
             "status": "active"
         }
     
-    # Start Telegram bot in background thread
+    # Option 1: Run bot in thread (with event loop fix above)
     bot_thread = threading.Thread(target=run_telegram_bot)
     bot_thread.daemon = True
     bot_thread.start()
     
     print("Flask server starting...")
-    
-    # Run Flask app on the port Render expects
     port = int(os.environ.get('PORT', 10000))
     flask_app.run(host='0.0.0.0', port=port)
+    
+    # Option 2: Alternative - Run Flask in thread, bot in main (uncomment if needed)
+    # def run_flask():
+    #     port = int(os.environ.get('PORT', 10000))
+    #     flask_app.run(host='0.0.0.0', port=port)
+    # 
+    # flask_thread = threading.Thread(target=run_flask)
+    # flask_thread.daemon = True
+    # flask_thread.start()
+    # 
+    # # Run bot in main thread (no event loop issues)
+    # run_telegram_bot()
