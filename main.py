@@ -1,14 +1,13 @@
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import os
-import threading
-from flask import Flask
 
-# Replace with your actual bot token
-BOT_TOKEN = os.getenv('BOT_TOKEN', "7955835419:AAGjxTFvtAUckg-yVfxxphPWhrEksPk5sZU")
+import os
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
 
 # Admin ID (replace with your Telegram user ID)
-ADMIN_ID = int(os.getenv('ADMIN_ID', '6645404238'))
+ADMIN_ID = 6645404238  # TODO: Replace this with your real Telegram user ID
 
 # Data for the bot flow
 classes = ['6', '7', '8', '9', '10', '11', '12']
@@ -25,7 +24,10 @@ years = ['2020', '2021', '2022', '2023', '2024']
 
 # Temporary user state
 user_data = {}
+
+# For tracking stats
 user_logs = []
+
 
 def build_keyboard(options, add_back=True):
     keyboard = [[KeyboardButton(opt)] for opt in options]
@@ -37,11 +39,12 @@ def build_keyboard(options, add_back=True):
 def main_menu():
     return [[KeyboardButton("📚 Start")], [KeyboardButton("/admin")]]
 
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     user_data[chat_id] = {'step': 'menu'}
-    await update.message.reply_text("👋 Welcome! Please choose an option:",
-                                    reply_markup=ReplyKeyboardMarkup(main_menu(), resize_keyboard=True))
+    await update.message.reply_text("👋 Welcome! Please choose an option:", reply_markup=ReplyKeyboardMarkup(main_menu(), resize_keyboard=True))
+
 
 async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -53,6 +56,7 @@ async def admin(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(msg)
     else:
         await update.message.reply_text("❌ You are not authorized to access this command.")
+
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -70,8 +74,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if text == "📚 Start" or text == "☰ Menu":
         data = {'step': 'class'}
         keyboard = build_keyboard(classes, add_back=False)
-        await update.message.reply_text("📚 Please select your class:",
-                                        reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+        await update.message.reply_text("📚 Please select your class:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         user_data[chat_id] = data
         return
 
@@ -81,19 +84,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             data.pop('class', None)
             data['step'] = 'class'
             keyboard = build_keyboard(classes, add_back=False)
-            await update.message.reply_text("📚 Please select your class:",
-                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("📚 Please select your class:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         elif data['step'] == 'year':
             data.pop('subject', None)
             data['step'] = 'subject'
             cls = data['class']
             keyboard = build_keyboard(subjects[cls], add_back=True)
-            await update.message.reply_text("📘 Please select your subject:",
-                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("📘 Please select your subject:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         else:
             data = {'step': 'menu'}
-            await update.message.reply_text("🔁 Back to main menu. Choose an option:",
-                                            reply_markup=ReplyKeyboardMarkup(main_menu(), resize_keyboard=True))
+            await update.message.reply_text("🔁 Back to main menu. Choose an option:", reply_markup=ReplyKeyboardMarkup(main_menu(), resize_keyboard=True))
         user_data[chat_id] = data
         return
 
@@ -103,12 +103,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             data['class'] = text
             data['step'] = 'subject'
             keyboard = build_keyboard(subjects[text])
-            await update.message.reply_text("📘 Please select your subject:",
-                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("📘 Please select your subject:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         else:
             keyboard = build_keyboard(classes, add_back=False)
-            await update.message.reply_text("❗ Invalid class. Please select from the options.",
-                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("❗ Invalid class. Please select from the options.", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
     # Subject selection
     elif data['step'] == 'subject':
@@ -116,13 +114,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             data['subject'] = text
             data['step'] = 'year'
             keyboard = build_keyboard(years)
-            await update.message.reply_text("📅 Please select the year:",
-                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("📅 Please select the year:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
         else:
             cls = data['class']
             keyboard = build_keyboard(subjects[cls])
-            await update.message.reply_text("❗ Invalid subject. Please select from the options.",
-                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("❗ Invalid subject. Please select from the options.", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
     # Year selection
     elif data['step'] == 'year':
@@ -137,107 +133,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_data.pop(chat_id, None)
         else:
             keyboard = build_keyboard(years)
-            await update.message.reply_text("❗ Invalid year. Please select from the options.",
-                                            reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
+            await update.message.reply_text("❗ Invalid year. Please select from the options.", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True))
 
     user_data[chat_id] = data
 
-def run_telegram_bot():
-    """Run the Telegram bot - WORKING VERSION with proper async handling"""
-    import asyncio
-    
-    async def start_bot():
-        print("Starting Telegram bot...")
-        app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-        app.add_handler(CommandHandler('start', start))
-        app.add_handler(CommandHandler('admin', admin))
-        app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-
-        print("Bot handlers added, initializing...")
-        
-        # Properly initialize and start the bot
-        await app.initialize()
-        await app.start()
-        await app.updater.start_polling(drop_pending_updates=True)
-        
-        print("Bot is now polling for updates...")
-        
-        # Keep running - this is the correct way to keep the bot alive
-        try:
-            # Use a simple loop instead of idle()
-            import signal
-            import sys
-            
-            def signal_handler(sig, frame):
-                print('Bot stopping...')
-                sys.exit(0)
-            
-            signal.signal(signal.SIGINT, signal_handler)
-            signal.signal(signal.SIGTERM, signal_handler)
-            
-            # Keep the bot running
-            while True:
-                await asyncio.sleep(1)
-                
-        except (KeyboardInterrupt, SystemExit):
-            print("Bot stopped by user")
-        finally:
-            print("Shutting down bot...")
-            await app.updater.stop()
-            await app.stop()
-            await app.shutdown()
-    
-    # Create and set event loop for this thread
-    try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(start_bot())
-    except Exception as e:
-        print(f"Error running Telegram bot: {e}")
-        import traceback
-        traceback.print_exc()
-    finally:
-        if 'loop' in locals():
-            loop.close()
-
+# Main function
 if __name__ == '__main__':
-    # Create Flask app for port binding (required by Render Web Service)
-    flask_app = Flask(__name__)
-    
-    @flask_app.route('/')
-    def home():
-        return "Telegram Bot is running! 🤖"
-    
-    @flask_app.route('/health')
-    def health():
-        return {"status": "ok", "bot": "running"}
-    
-    @flask_app.route('/stats')
-    def stats():
-        return {
-            "total_users": len(user_data),
-            "total_requests": len(user_logs),
-            "status": "active"
-        }
-    
-    # Option 1: Run bot in thread (with event loop fix above)
-    bot_thread = threading.Thread(target=run_telegram_bot)
-    bot_thread.daemon = True
-    bot_thread.start()
-    
-    print("Flask server starting...")
-    port = int(os.environ.get('PORT', 10000))
-    flask_app.run(host='0.0.0.0', port=port)
-    
-    # Option 2: Alternative - Run Flask in thread, bot in main (uncomment if needed)
-    # def run_flask():
-    #     port = int(os.environ.get('PORT', 10000))
-    #     flask_app.run(host='0.0.0.0', port=port)
-    # 
-    # flask_thread = threading.Thread(target=run_flask)
-    # flask_thread.daemon = True
-    # flask_thread.start()
-    # 
-    # # Run bot in main thread (no event loop issues)
-    # run_telegram_bot()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(CommandHandler('start', start))
+    app.add_handler(CommandHandler('admin', admin))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+    app.run_polling()
