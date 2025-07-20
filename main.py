@@ -143,13 +143,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data[chat_id] = data
 
 def run_telegram_bot():
-    """Run the Telegram bot - FIXED VERSION with proper event loop"""
+    """Run the Telegram bot - WORKING VERSION with proper async handling"""
     import asyncio
     
-    # Set up event loop for this thread
-    asyncio.set_event_loop(asyncio.new_event_loop())
-    
-    try:
+    async def start_bot():
         print("Starting Telegram bot...")
         app = ApplicationBuilder().token(BOT_TOKEN).build()
 
@@ -157,14 +154,52 @@ def run_telegram_bot():
         app.add_handler(CommandHandler('admin', admin))
         app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-        print("Bot handlers added, starting polling...")
-        # Now run_polling will work because we have an event loop
-        app.run_polling(drop_pending_updates=True)
+        print("Bot handlers added, initializing...")
         
+        # Properly initialize and start the bot
+        await app.initialize()
+        await app.start()
+        await app.updater.start_polling(drop_pending_updates=True)
+        
+        print("Bot is now polling for updates...")
+        
+        # Keep running - this is the correct way to keep the bot alive
+        try:
+            # Use a simple loop instead of idle()
+            import signal
+            import sys
+            
+            def signal_handler(sig, frame):
+                print('Bot stopping...')
+                sys.exit(0)
+            
+            signal.signal(signal.SIGINT, signal_handler)
+            signal.signal(signal.SIGTERM, signal_handler)
+            
+            # Keep the bot running
+            while True:
+                await asyncio.sleep(1)
+                
+        except (KeyboardInterrupt, SystemExit):
+            print("Bot stopped by user")
+        finally:
+            print("Shutting down bot...")
+            await app.updater.stop()
+            await app.stop()
+            await app.shutdown()
+    
+    # Create and set event loop for this thread
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(start_bot())
     except Exception as e:
         print(f"Error running Telegram bot: {e}")
         import traceback
         traceback.print_exc()
+    finally:
+        if 'loop' in locals():
+            loop.close()
 
 if __name__ == '__main__':
     # Create Flask app for port binding (required by Render Web Service)
