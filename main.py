@@ -143,10 +143,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data[chat_id] = data
 
 def run_telegram_bot():
-    """Run the Telegram bot in a separate thread with proper asyncio setup"""
-    import asyncio
-    
-    async def start_bot():
+    """Run the Telegram bot - FIXED VERSION"""
+    try:
         print("Starting Telegram bot...")
         app = ApplicationBuilder().token(BOT_TOKEN).build()
 
@@ -154,24 +152,11 @@ def run_telegram_bot():
         app.add_handler(CommandHandler('admin', admin))
         app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-        await app.initialize()
-        await app.start()
-        await app.updater.start_polling()
+        # Use run_polling instead of complex async setup
+        app.run_polling(drop_pending_updates=True)
         
-        # Keep the bot running
-        try:
-            await app.updater.idle()
-        except KeyboardInterrupt:
-            print("Bot stopped")
-        finally:
-            await app.updater.stop()
-            await app.stop()
-            await app.shutdown()
-    
-    # Create new event loop for this thread
-    asyncio.set_event_loop(asyncio.new_event_loop())
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(start_bot())
+    except Exception as e:
+        print(f"Error running Telegram bot: {e}")
 
 if __name__ == '__main__':
     # Create Flask app for port binding (required by Render Web Service)
