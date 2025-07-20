@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: study-helper-bot
+    env: python
+    region: oregon
+    buildCommand: ""
+    startCommand: python main.py
+    runtime: python
+    pythonVersion: 3.10
+    plan: free
+    autoDeploy: true
