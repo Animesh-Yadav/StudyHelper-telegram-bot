@@ -143,15 +143,35 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data[chat_id] = data
 
 def run_telegram_bot():
-    """Run the Telegram bot in a separate thread"""
-    print("Starting Telegram bot...")
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    """Run the Telegram bot in a separate thread with proper asyncio setup"""
+    import asyncio
+    
+    async def start_bot():
+        print("Starting Telegram bot...")
+        app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('admin', admin))
-    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
+        app.add_handler(CommandHandler('start', start))
+        app.add_handler(CommandHandler('admin', admin))
+        app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
 
-    app.run_polling()
+        await app.initialize()
+        await app.start()
+        await app.updater.start_polling()
+        
+        # Keep the bot running
+        try:
+            await app.updater.idle()
+        except KeyboardInterrupt:
+            print("Bot stopped")
+        finally:
+            await app.updater.stop()
+            await app.stop()
+            await app.shutdown()
+    
+    # Create new event loop for this thread
+    asyncio.set_event_loop(asyncio.new_event_loop())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(start_bot())
 
 if __name__ == '__main__':
     # Create Flask app for port binding (required by Render Web Service)
